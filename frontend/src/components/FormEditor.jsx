@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { createForm, updateForm, uploadHeaderImage, uploadQuestionImage, getForm } from '../api';
 import QuestionAdvancedUI from './QuestionAdvancedUI';
 
-const defaultQuestion = { type: 'categorize', text: '', image: '', options: [], passage: '', blanks: [], categories: [], questions: [] };
+const defaultQuestion = { type: 'categorize', text: '', image: '', options: [], passage: '', blanks: [], categories: [], questions: [], subQuestions: [] };
 
 const FormEditor = ({ formId, onSave, onCancel }) => {
   const [title, setTitle] = useState('');
@@ -92,6 +92,7 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
               <option value="category">Categorization</option>
               <option value="cloze">Fill in the Blank</option>
               <option value="comprehension">Normal MCQ</option>
+              <option value="passage">Comprehension (Passage + Questions)</option>
             </select>
             <input
               className="border p-1 mb-1 w-full"

@@ -292,6 +292,34 @@ const Question = React.memo(({ q, idx, answers, dragOptions, handleChange }) => 
           ))}
         </div>
       )}
+      {q.type === 'passage' && (
+        <div className="mb-4">
+          <div className="bg-gray-100 p-3 rounded mb-3 whitespace-pre-line border border-gray-300">
+            {q.passage}
+          </div>
+          {q.subQuestions?.map((sub, subIdx) => (
+            <div key={subIdx} className="mb-3">
+              <div className="font-semibold mb-1">{sub.text}</div>
+              {sub.options?.map((opt, i) => (
+                <label key={i} className="flex items-center mb-1">
+                  <input
+                    type="radio"
+                    name={`q${idx}-sub${subIdx}`}
+                    checked={answers[idx]?.[subIdx] === i}
+                    onChange={() => {
+                      const newAns = Array.isArray(answers[idx]) ? [...answers[idx]] : [];
+                      newAns[subIdx] = i;
+                      handleChange(idx, newAns);
+                    }}
+                    className="mr-2"
+                  />
+                  {opt}
+                </label>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
 
       {!['cloze', 'categorize', 'category', 'comprehension'].includes(q.type) && (
         <input className="border p-1 w-full" placeholder="Your answer" value={answers[idx]} onChange={e => handleChange(idx, e.target.value)} />

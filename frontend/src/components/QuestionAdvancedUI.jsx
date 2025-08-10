@@ -225,5 +225,52 @@ export default function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuest
       />
     );
   }
+  // Comprehension (Passage + Sub-Questions)
+  if (q.type === 'passage') {
+    const subQuestions = q.subQuestions || [];
+    const setSubQuestions = (subs) => updateQuestion(idx, 'subQuestions', subs);
+    const addSub = () => setSubQuestions([...subQuestions, { text: '', options: ['', ''], answer: 0 }]);
+    const updateSub = (i, field, value) => {
+      const newSubs = [...subQuestions];
+      newSubs[i][field] = value;
+      setSubQuestions(newSubs);
+    };
+    const removeSub = (i) => setSubQuestions(subQuestions.filter((_, j) => j !== i));
+    return (
+      <div className="space-y-4">
+        <div>
+          <div className="font-semibold mb-1">Passage:</div>
+          <textarea
+            className="border p-1 w-full mb-2"
+            rows={4}
+            value={q.passage || ''}
+            onChange={e => updateQuestion(idx, 'passage', e.target.value)}
+            placeholder="Enter passage text here..."
+          />
+        </div>
+        <div>
+          <div className="font-semibold mb-1">Sub-Questions:</div>
+          {subQuestions.map((sub, i) => (
+            <div key={i} className="border p-2 mb-2 rounded">
+              <input
+                className="border p-1 mb-1 w-full"
+                placeholder={`Question ${i + 1}`}
+                value={sub.text}
+                onChange={e => updateSub(i, 'text', e.target.value)}
+              />
+              <OptionsBuilder
+                options={sub.options || []}
+                setOptions={opts => updateSub(i, 'options', opts)}
+                answer={sub.answer}
+                setAnswer={ans => updateSub(i, 'answer', ans)}
+              />
+              <button className="text-red-600 mt-1" onClick={() => removeSub(i)}>Remove</button>
+            </div>
+          ))}
+          <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={addSub}>Add Sub-Question</button>
+        </div>
+      </div>
+    );
+  }
   return null;
 }
