@@ -43,19 +43,20 @@ function ClozeBuilder({ value, onChange, blanks, setBlanks }) {
   };
 
   return (
-    <div>
+    <div className="bg-white/70 rounded-xl shadow p-4 mb-4 border border-blue-100">
       <textarea
-        className="border p-1 w-full mb-1"
+        className="border border-blue-100 p-3 w-full mb-3 rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
         value={value}
         onChange={e => onChange(e.target.value)}
         onSelect={handleSelect}
         rows={2}
+        placeholder="Type your question with blanks (_____) here..."
       />
-      <button className="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onClick={handleBlank}>Blank Selected</button>
-      <div className="text-sm mt-1 flex flex-wrap gap-2">Blanks: {blanks.map((b, i) => (
-        <span key={i} className="bg-gray-200 px-1 rounded flex items-center">
+      <button className="bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold mr-3 shadow hover:bg-yellow-600 transition" onClick={handleBlank}>Blank Selected</button>
+      <div className="text-sm mt-2 flex flex-wrap gap-2">Blanks: {blanks.map((b, i) => (
+        <span key={i} className="bg-gray-200 px-2 py-1 rounded flex items-center font-semibold">
           {b}
-          <button type="button" className="ml-1 text-red-500" onClick={() => handleRemoveBlank(i)} title="Remove blank">&times;</button>
+          <button type="button" className="ml-2 text-red-500 font-bold" onClick={() => handleRemoveBlank(i)} title="Remove blank">&times;</button>
         </span>
       ))}</div>
     </div>
@@ -73,12 +74,12 @@ function OptionsBuilder({ options, setOptions, answer, setAnswer }) {
   const removeOption = (i) => setOptions(options.filter((_, idx) => idx !== i));
 
   return (
-    <div>
-      <div className="mb-1">Options:</div>
+    <div className="bg-white/60 rounded-xl shadow p-4 mb-2 border border-blue-50">
+      <div className="mb-2 font-semibold text-blue-700">Options:</div>
       {options.map((opt, i) => (
-        <div key={i} className="flex items-center mb-1">
+        <div key={i} className="flex items-center mb-2 gap-2">
           <input
-            className="border p-1 mr-2"
+            className="border border-blue-100 p-2 rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400 flex-1"
             value={opt}
             onChange={e => updateOption(i, e.target.value)}
             placeholder={`Option ${i + 1}`}
@@ -88,12 +89,12 @@ function OptionsBuilder({ options, setOptions, answer, setAnswer }) {
             name="answer"
             checked={answer === i}
             onChange={() => setAnswer(i)}
-            className="mr-2"
+            className="mr-2 accent-blue-500"
           />
-          <button className="text-red-600" onClick={() => removeOption(i)}>Remove</button>
+          <button className="text-red-500 font-bold text-lg hover:scale-110 transition" onClick={() => removeOption(i)} title="Remove">&times;</button>
         </div>
       ))}
-      <button className="bg-blue-400 text-white px-2 py-1 rounded" onClick={addOption}>Add Option</button>
+      <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:from-blue-600 hover:to-purple-600 transition mt-2" onClick={addOption}>Add Option</button>
     </div>
   );
 }
@@ -237,11 +238,11 @@ export default function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuest
     };
     const removeSub = (i) => setSubQuestions(subQuestions.filter((_, j) => j !== i));
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <div className="font-semibold mb-1">Passage:</div>
+          <div className="font-bold mb-2 text-blue-700">Passage:</div>
           <textarea
-            className="border p-1 w-full mb-2"
+            className="border border-blue-100 p-4 w-full mb-4 rounded-xl text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
             rows={4}
             value={q.passage || ''}
             onChange={e => updateQuestion(idx, 'passage', e.target.value)}
@@ -249,11 +250,14 @@ export default function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuest
           />
         </div>
         <div>
-          <div className="font-semibold mb-1">Sub-Questions:</div>
+          <div className="font-bold mb-2 text-blue-700">Sub-Questions:</div>
           {subQuestions.map((sub, i) => (
-            <div key={i} className="border p-2 mb-2 rounded">
+            <div key={i} className="border border-blue-100 p-4 mb-4 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md relative">
+              <div className="absolute top-4 right-4">
+                <button className="text-red-500 font-bold text-lg hover:scale-110 transition" onClick={() => removeSub(i)} title="Remove">&times;</button>
+              </div>
               <input
-                className="border p-1 mb-1 w-full"
+                className="border border-blue-100 p-2 mb-3 w-full rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder={`Question ${i + 1}`}
                 value={sub.text}
                 onChange={e => updateSub(i, 'text', e.target.value)}
@@ -264,10 +268,9 @@ export default function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuest
                 answer={sub.answer}
                 setAnswer={ans => updateSub(i, 'answer', ans)}
               />
-              <button className="text-red-600 mt-1" onClick={() => removeSub(i)}>Remove</button>
             </div>
           ))}
-          <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={addSub}>Add Sub-Question</button>
+          <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-purple-600 transition" onClick={addSub}>Add Sub-Question</button>
         </div>
       </div>
     );

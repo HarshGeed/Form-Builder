@@ -66,25 +66,28 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <h2 className="text-xl font-bold mb-4">{formId ? 'Edit' : 'Create'} Form</h2>
+    <div className="p-8 max-w-3xl mx-auto bg-white/80 rounded-3xl shadow-2xl border border-blue-100 mt-8 mb-8">
+      <h2 className="text-3xl font-extrabold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-400 drop-shadow-lg tracking-tight">{formId ? 'Edit' : 'Create'} Form</h2>
       <input
-        className="border p-2 mb-2 w-full"
+        className="border border-blue-100 p-3 mb-4 w-full rounded-xl text-lg bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
         placeholder="Form Title"
         value={title}
         onChange={e => setTitle(e.target.value)}
       />
-      <div className="mb-4">
-        <label className="block mb-1">Header Image</label>
-        <input type="file" accept="image/*" onChange={handleHeaderImage} />
-        {headerImage && <img src={headerImage} alt="Header" className="mt-2 max-h-32" />}
+      <div className="mb-8">
+        <label className="block mb-2 font-semibold text-gray-700">Header Image</label>
+        <input type="file" accept="image/*" onChange={handleHeaderImage} className="mb-2" />
+        {headerImage && <img src={headerImage} alt="Header" className="mt-2 max-h-40 rounded-xl shadow" />}
       </div>
       <div>
-        <h3 className="font-semibold mb-2">Questions</h3>
+        <h3 className="font-bold mb-4 text-xl text-blue-700">Questions</h3>
         {questions.map((q, idx) => (
-          <div key={idx} className="border p-2 mb-2 rounded">
+          <div key={idx} className="border border-blue-100 p-6 mb-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md relative">
+            <div className="absolute top-4 right-4">
+              <button className="text-red-500 font-bold text-lg hover:scale-110 transition" onClick={() => removeQuestion(idx)} title="Remove">&times;</button>
+            </div>
             <select
-              className="border p-1 mb-1"
+              className="border border-blue-100 p-2 mb-3 rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
               value={q.type}
               onChange={e => updateQuestion(idx, 'type', e.target.value)}
             >
@@ -95,7 +98,7 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
               <option value="passage">Comprehension (Passage + Questions)</option>
             </select>
             <input
-              className="border p-1 mb-1 w-full"
+              className="border border-blue-100 p-2 mb-3 w-full rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Question text"
               value={q.text}
               onChange={e => updateQuestion(idx, 'text', e.target.value)}
@@ -106,14 +109,13 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
               updateQuestion={updateQuestion}
               handleQuestionImage={handleQuestionImage}
             />
-            <button className="text-red-600 mt-2" onClick={() => removeQuestion(idx)}>Remove</button>
           </div>
         ))}
-        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={addQuestion}>Add Question</button>
+        <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-purple-600 transition" onClick={addQuestion}>Add Question</button>
       </div>
-      <div className="mt-4 flex gap-2">
-        <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={handleSave} disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
-        <button className="bg-gray-400 text-white px-4 py-2 rounded" onClick={onCancel}>Cancel</button>
+      <div className="mt-8 flex gap-4 justify-end">
+        <button className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:from-green-600 hover:to-blue-600 transition" onClick={handleSave} disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
+        <button className="bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-bold shadow hover:bg-gray-400 transition" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );

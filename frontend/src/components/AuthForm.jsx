@@ -17,35 +17,35 @@ export default function AuthForm({ mode = 'login', onSubmit, switchMode }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-gray-100">
-      <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-8 w-full max-w-sm">
-        <h2 className="text-2xl font-bold mb-6 text-center text-blue-700">{mode === 'login' ? 'Login' : 'Register'}</h2>
-        <div className="mb-4">
-          <label className="block mb-1 text-gray-700">Email</label>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 via-white to-purple-200">
+      <form onSubmit={handleSubmit} className="bg-white/70 backdrop-blur-lg shadow-2xl rounded-3xl p-10 w-full max-w-md border border-blue-100">
+        <h2 className="text-3xl font-extrabold mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-400 drop-shadow-lg tracking-tight">{mode === 'login' ? 'Login' : 'Register'}</h2>
+        <div className="mb-6">
+          <label className="block mb-2 text-gray-700 font-semibold">Email</label>
           <input
             type="email"
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border border-blue-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/80"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
           />
         </div>
-        <div className="mb-4">
-          <label className="block mb-1 text-gray-700">Password</label>
+        <div className="mb-6">
+          <label className="block mb-2 text-gray-700 font-semibold">Password</label>
           <input
             type="password"
-            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full border border-blue-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/80"
             value={password}
             onChange={e => setPassword(e.target.value)}
             required
           />
         </div>
         {mode === 'register' && (
-          <div className="mb-4">
-            <label className="block mb-1 text-gray-700">Confirm Password</label>
+          <div className="mb-6">
+            <label className="block mb-2 text-gray-700 font-semibold">Confirm Password</label>
             <input
               type="password"
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full border border-blue-100 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/80"
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
               required
@@ -53,19 +53,19 @@ export default function AuthForm({ mode = 'login', onSubmit, switchMode }) {
           </div>
         )}
         {error && <div className="mb-4 text-red-600 text-sm text-center">{error}</div>}
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 transition mb-2">
+        <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-purple-500 text-white py-3 rounded-xl font-bold hover:from-blue-700 hover:to-purple-600 transition mb-4 shadow-lg">
           {mode === 'login' ? 'Login' : 'Register'}
         </button>
         <div className="text-center text-sm text-gray-500">
           {mode === 'login' ? (
             <>
               Don't have an account?{' '}
-              <button type="button" className="text-blue-600 hover:underline" onClick={switchMode}>Register</button>
+              <button type="button" className="text-blue-600 hover:underline font-semibold" onClick={switchMode}>Register</button>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <button type="button" className="text-blue-600 hover:underline" onClick={switchMode}>Login</button>
+              <button type="button" className="text-blue-600 hover:underline font-semibold" onClick={switchMode}>Login</button>
             </>
           )}
         </div>

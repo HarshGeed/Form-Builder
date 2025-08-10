@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+body {
+	font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, 'sans-serif';
+	background: linear-gradient(135deg, #e0e7ff 0%, #fff 60%, #f3e8ff 100%);
+	min-height: 100vh;
+}

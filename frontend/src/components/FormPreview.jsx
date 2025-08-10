@@ -117,11 +117,10 @@ const FormPreview = ({ formId, onBack }) => {
   if (submitted) return <div className="p-4">Thank you for your response!</div>;
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <button className="mb-4 text-blue-600" onClick={onBack}>Back</button>
-      <h2 className="text-2xl font-bold mb-2">{form.title}</h2>
-      {form.headerImage && <img src={form.headerImage} alt="Header" className="mb-4 max-h-40" />}
-      
+    <div className="p-8 max-w-3xl mx-auto bg-white/80 rounded-3xl shadow-2xl border border-blue-100 mt-8 mb-8">
+      <button className="mb-6 text-blue-600 font-semibold hover:underline" onClick={onBack}>← Back</button>
+      <h2 className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-400 drop-shadow-lg tracking-tight">{form.title}</h2>
+      {form.headerImage && <img src={form.headerImage} alt="Header" className="mb-6 max-h-56 rounded-xl shadow" />}
       <form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
         <DragDropContext onDragEnd={handleDragEnd}>
           {form.questions.map((q, idx) => (
@@ -135,7 +134,7 @@ const FormPreview = ({ formId, onBack }) => {
             />
           ))}
         </DragDropContext>
-        <button className="bg-green-600 text-white px-4 py-2 rounded" type="submit">Submit</button>
+        <button className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:from-green-600 hover:to-blue-600 transition mt-8 w-full text-lg" type="submit">Submit</button>
       </form>
     </div>
   );
@@ -144,7 +143,7 @@ const FormPreview = ({ formId, onBack }) => {
 // Memoized Question component
 const Question = React.memo(({ q, idx, answers, dragOptions, handleChange }) => {
   return (
-    <div className="mb-4 border p-2 rounded">
+  <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md">
       <div className="font-semibold mb-1">{q.text}</div>
       {q.image && <img src={q.image} alt="Q" className="mb-2 max-h-24" />}
 
