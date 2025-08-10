@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import FormList from './components/FormList';
 import FormEditor from './components/FormEditor';
 import FormPreview from './components/FormPreview';
+
 import AuthForm from './components/AuthForm';
+import { register, login } from './api';
 
 
 function App() {
@@ -12,9 +14,22 @@ function App() {
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [user, setUser] = useState(null); // null = not logged in
 
-  // Dummy auth handler (replace with real API later)
-  const handleAuth = ({ email, password }) => {
-    setUser({ email });
+
+  // Real auth handler
+  const handleAuth = async ({ email, password }) => {
+    try {
+      if (authMode === 'register') {
+        await register({ email, password });
+        // Optionally auto-login after register
+        const res = await login({ email, password });
+        setUser({ email: res.data.email, token: res.data.token });
+      } else {
+        const res = await login({ email, password });
+        setUser({ email: res.data.email, token: res.data.token });
+      }
+    } catch (err) {
+      alert(err.response?.data?.error || 'Authentication failed');
+    }
   };
 
   const handleEdit = (id) => {

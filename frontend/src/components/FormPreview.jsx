@@ -1,22 +1,72 @@
+
 import React, { useEffect, useState } from 'react';
 import { getForm, submitResponse } from '../api';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const FormPreview = ({ formId, onBack }) => {
   const [form, setForm] = useState(null);
   const [answers, setAnswers] = useState([]);
+  const [dragOptions, setDragOptions] = useState([]); // for cloze drag-and-drop
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     getForm(formId).then(res => {
       setForm(res.data);
-      setAnswers(res.data.questions.map(() => ''));
+      setAnswers(res.data.questions.map(q => q.type === 'cloze' ? Array((q.text.match(/_____/g)||[]).length).fill(null) : ''));
+      setDragOptions(res.data.questions.map(q => q.type === 'cloze' ? shuffleArray([...(q.options||[]).filter(Boolean)]) : []));
     });
   }, [formId]);
+
+  // Helper to shuffle options
+  function shuffleArray(arr) {
+    return arr.slice().sort(() => Math.random() - 0.5);
+  }
 
   const handleChange = (idx, value) => {
     const newAnswers = [...answers];
     newAnswers[idx] = value;
     setAnswers(newAnswers);
+  };
+
+  // Drag and drop handler for cloze
+  const handleDragEnd = (result, qIdx, blankCount) => {
+    if (!result.destination) return;
+    const { source, destination } = result;
+    // If dragging from options to a blank
+    if (source.droppableId === `options-${qIdx}` && destination.droppableId.startsWith(`blank-${qIdx}-`)) {
+      const blankIdx = parseInt(destination.droppableId.split('-').pop(), 10);
+      // Place option in blank, remove from options
+      const option = dragOptions[qIdx][source.index];
+      const newAnswers = answers.map((a, i) => i === qIdx ? [...a] : a);
+      newAnswers[qIdx][blankIdx] = option;
+      setAnswers(newAnswers);
+      // Remove from options
+      const newDragOptions = dragOptions.map((opts, i) => i === qIdx ? opts.filter((_, idx) => idx !== source.index) : opts);
+      setDragOptions(newDragOptions);
+    }
+    // If dragging from one blank to another (swap)
+    else if (source.droppableId.startsWith(`blank-${qIdx}-`) && destination.droppableId.startsWith(`blank-${qIdx}-`)) {
+      const fromIdx = parseInt(source.droppableId.split('-').pop(), 10);
+      const toIdx = parseInt(destination.droppableId.split('-').pop(), 10);
+      const newAnswers = answers.map((a, i) => i === qIdx ? [...a] : a);
+      const temp = newAnswers[qIdx][fromIdx];
+      newAnswers[qIdx][fromIdx] = newAnswers[qIdx][toIdx];
+      newAnswers[qIdx][toIdx] = temp;
+      setAnswers(newAnswers);
+    }
+    // If dragging from blank back to options
+    else if (source.droppableId.startsWith(`blank-${qIdx}-`) && destination.droppableId === `options-${qIdx}`) {
+      const blankIdx = parseInt(source.droppableId.split('-').pop(), 10);
+      const option = answers[qIdx][blankIdx];
+      if (!option) return;
+      // Remove from blank
+      const newAnswers = answers.map((a, i) => i === qIdx ? [...a] : a);
+      newAnswers[qIdx][blankIdx] = null;
+      setAnswers(newAnswers);
+      // Add back to options
+      const newDragOptions = dragOptions.map((opts, i) => i === qIdx ? [...opts, option] : opts);
+      setDragOptions(newDragOptions);
+    }
   };
 
   const handleSubmit = async () => {
@@ -39,34 +89,73 @@ const FormPreview = ({ formId, onBack }) => {
             {q.image && <img src={q.image} alt="Q" className="mb-2 max-h-24" />}
             {/* Render input based on question type */}
             {q.type === 'cloze' && q.blanks && q.blanks.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                {/* Render the cloze sentence with blanks as inputs */}
-                <div>
+              <DragDropContext onDragEnd={result => handleDragEnd(result, idx, q.blanks.length)}>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
                   {(() => {
-                    // Split the text by '_____' and interleave blanks
                     const parts = q.text.split('_____');
                     return parts.map((part, i) => (
-                      <span key={i}>
-                        {part}
+                      <React.Fragment key={i}>
+                        <span>{part}</span>
                         {i < q.blanks.length && (
-                          <input
-                            className="border-b-2 border-blue-400 mx-1 px-1 outline-none"
-                            style={{ width: Math.max(40, q.blanks[i].length * 10) }}
-                            value={answers[idx]?.[i] || ''}
-                            onChange={e => {
-                              const newAns = Array.isArray(answers[idx]) ? [...answers[idx]] : [];
-                              newAns[i] = e.target.value;
-                              const newAnswers = [...answers];
-                              newAnswers[idx] = newAns;
-                              setAnswers(newAnswers);
-                            }}
-                          />
+                          <Droppable droppableId={`blank-${idx}-${i}`} direction="vertical">
+                            {(provided, snapshot) => (
+                              <span
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className={`inline-block min-w-[60px] min-h-[32px] border-b-2 border-blue-400 mx-1 px-1 align-middle bg-white ${snapshot.isDraggingOver ? 'bg-blue-100' : ''}`}
+                              >
+                                {answers[idx]?.[i] ? (
+                                  <Draggable draggableId={`ans-${idx}-${i}-${answers[idx][i]}`} index={0}>
+                                    {(provided) => (
+                                      <span
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className="inline-block px-2 py-1 bg-blue-200 rounded cursor-move"
+                                      >
+                                        {answers[idx][i]}
+                                      </span>
+                                    )}
+                                  </Draggable>
+                                ) : null}
+                                {provided.placeholder}
+                              </span>
+                            )}
+                          </Droppable>
                         )}
-                      </span>
+                      </React.Fragment>
                     ));
                   })()}
                 </div>
-              </div>
+                <div className="mb-2">
+                  <div className="font-semibold text-sm mb-1">Options:</div>
+                  <Droppable droppableId={`options-${idx}`} direction="horizontal">
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`flex flex-wrap gap-2 min-h-[40px] ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}
+                      >
+                        {dragOptions[idx]?.map((opt, i) => (
+                          <Draggable key={opt + i} draggableId={`opt-${idx}-${i}-${opt}`} index={i}>
+                            {(provided) => (
+                              <span
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="inline-block px-2 py-1 bg-blue-100 rounded cursor-move border"
+                              >
+                                {opt}
+                              </span>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
+              </DragDropContext>
             ) : q.type === 'categorize' && q.options && q.options.length > 0 ? (
               <div>
                 {q.options.map((opt, i) => (

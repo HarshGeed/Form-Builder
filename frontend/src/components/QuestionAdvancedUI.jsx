@@ -4,6 +4,16 @@ import React, { useState } from 'react';
 function ClozeBuilder({ value, onChange, blanks, setBlanks }) {
   const [selection, setSelection] = useState({ start: null, end: null });
 
+  // Keep blanks array in sync with number of _____ in text
+  React.useEffect(() => {
+    const blankCount = (value.match(/_____/g) || []).length;
+    if (blankCount < blanks.length) {
+      setBlanks(blanks.slice(0, blankCount));
+    }
+    // Don't auto-add blanks, only trim
+    // If user adds more _____, they must select and blank new text
+  }, [value]);
+
   const handleSelect = (e) => {
     const start = e.target.selectionStart;
     const end = e.target.selectionEnd;
@@ -20,6 +30,18 @@ function ClozeBuilder({ value, onChange, blanks, setBlanks }) {
     setBlanks([...blanks, blank]);
   };
 
+  const handleRemoveBlank = (i) => {
+    // Remove the i-th blank and the corresponding _____
+    let idx = -1;
+    let newText = value.replace(/_____/g, (m) => {
+      idx++;
+      return idx === i ? '' : m;
+    });
+    const newBlanks = blanks.filter((_, j) => j !== i);
+    onChange(newText);
+    setBlanks(newBlanks);
+  };
+
   return (
     <div>
       <textarea
@@ -30,7 +52,12 @@ function ClozeBuilder({ value, onChange, blanks, setBlanks }) {
         rows={2}
       />
       <button className="bg-yellow-500 text-white px-2 py-1 rounded mr-2" onClick={handleBlank}>Blank Selected</button>
-      <div className="text-sm mt-1">Blanks: {blanks.map((b, i) => <span key={i} className="bg-gray-200 px-1 mx-1 rounded">{b}</span>)}</div>
+      <div className="text-sm mt-1 flex flex-wrap gap-2">Blanks: {blanks.map((b, i) => (
+        <span key={i} className="bg-gray-200 px-1 rounded flex items-center">
+          {b}
+          <button type="button" className="ml-1 text-red-500" onClick={() => handleRemoveBlank(i)} title="Remove blank">&times;</button>
+        </span>
+      ))}</div>
     </div>
   );
 }
@@ -75,12 +102,23 @@ export default function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuest
   // Cloze
   if (q.type === 'cloze') {
     return (
-      <ClozeBuilder
-        value={q.text}
-        onChange={val => updateQuestion(idx, 'text', val)}
-        blanks={q.blanks || []}
-        setBlanks={blanks => updateQuestion(idx, 'blanks', blanks)}
-      />
+      <>
+        <ClozeBuilder
+          value={q.text}
+          onChange={val => updateQuestion(idx, 'text', val)}
+          blanks={q.blanks || []}
+          setBlanks={blanks => updateQuestion(idx, 'blanks', blanks)}
+        />
+        <div className="mt-2">
+          <div className="font-semibold mb-1">Options for Drag & Drop (include all correct and distractors):</div>
+          <OptionsBuilder
+            options={q.options || []}
+            setOptions={opts => updateQuestion(idx, 'options', opts)}
+            answer={null}
+            setAnswer={() => {}}
+          />
+        </div>
+      </>
     );
   }
   // Image-based MCQ

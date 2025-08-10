@@ -1,6 +1,10 @@
 import axios from 'axios';
 
+
 const API_BASE = 'http://localhost:5000/api';
+
+export const register = (data) => axios.post(`${API_BASE}/auth/register`, data);
+export const login = (data) => axios.post(`${API_BASE}/auth/login`, data);
 
 export const getForms = () => axios.get(`${API_BASE}/forms`);
 export const getForm = (id) => axios.get(`${API_BASE}/forms/${id}`);
