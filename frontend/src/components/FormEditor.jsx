@@ -89,6 +89,7 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
               onChange={e => updateQuestion(idx, 'type', e.target.value)}
             >
               <option value="categorize">Image MCQ</option>
+              <option value="category">Categorization</option>
               <option value="cloze">Fill in the Blank</option>
               <option value="comprehension">Normal MCQ</option>
             </select>
