@@ -73,7 +73,18 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
       />
       <div className="mb-8">
         <label className="block mb-2 font-semibold text-gray-700">Header Image</label>
-        <input type="file" accept="image/*" onChange={handleHeaderImage} className="mb-2" />
+        <div className="relative inline-block mb-2">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleHeaderImage}
+            id="headerImageInput"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          />
+          <label htmlFor="headerImageInput" className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-5 py-2 rounded-lg font-bold shadow hover:from-blue-600 hover:to-purple-600 transition cursor-pointer block text-center">
+            Choose Image
+          </label>
+        </div>
         {headerImage && (
           <img
             src={headerImage.startsWith('/uploads/') ? `http://localhost:5000${headerImage}` : headerImage}

@@ -107,7 +107,12 @@ function App() {
         </div>
         <div className="flex flex-col gap-2">
           <div className="text-xs text-gray-500 mb-2">Logged in as <span className="font-semibold">{user.email}</span></div>
-          <button className="text-xs text-red-500 underline" onClick={handleLogout}>Logout</button>
+          <button
+            className="text-xs font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow hover:from-pink-600 hover:to-purple-600 transition border-none outline-none"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
           <div className="text-xs text-gray-400 mt-8">&copy; {new Date().getFullYear()} Custom Form Builder</div>
         </div>
       </aside>
