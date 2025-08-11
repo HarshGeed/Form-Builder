@@ -116,9 +116,12 @@ const FormPreview = ({ formId, onBack }) => {
   if (!form) return <div>Loading...</div>;
   if (submitted) return <div className="p-4">Thank you for your response!</div>;
 
+  // Hide back button if onBack is not provided
   return (
-    <div className="p-8 max-w-3xl mx-auto bg-white/80 rounded-3xl shadow-2xl border border-blue-100 mt-8 mb-8">
-      <button className="mb-6 text-blue-600 font-semibold hover:underline" onClick={onBack}>← Back</button>
+    <div className="p-8 max-w-2xl w-full min-w-[700px] mx-auto bg-white/80 rounded-3xl shadow-2xl border border-blue-100 mt-8 mb-8">
+      {onBack && (
+        <button className="mb-6 text-blue-600 font-semibold hover:underline" onClick={onBack}>← Back</button>
+      )}
       <h2 className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-400 drop-shadow-lg tracking-tight">{form.title}</h2>
       {form.headerImage && <img src={form.headerImage} alt="Header" className="mb-6 max-h-56 rounded-xl shadow" />}
       <form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
@@ -276,17 +279,20 @@ const Question = React.memo(({ q, idx, answers, dragOptions, handleChange }) => 
       )}
 
       {q.type === 'comprehension' && q.options?.length > 0 && (
-        <div>
+        <div className="flex flex-col gap-2 w-full mt-2 mb-2">
           {q.options.map((opt, i) => (
-            <label key={i} className="flex items-center mb-1">
+            <label
+              key={i}
+              className="flex items-center mb-1 bg-white border border-blue-100 rounded-lg px-4 py-2 shadow-sm cursor-pointer transition hover:bg-blue-50 text-left w-full"
+            >
               <input
                 type="radio"
                 name={`q${idx}`}
                 checked={answers[idx] === i}
                 onChange={() => handleChange(idx, i)}
-                className="mr-2"
+                className="mr-3 accent-blue-500"
               />
-              {opt}
+              <span className="text-base break-words">{opt}</span>
             </label>
           ))}
         </div>
