@@ -122,96 +122,27 @@ export default function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuest
       </>
     );
   }
-  // Image-based MCQ
-  if (q.type === 'categorize' || q.type === 'category') {
-    // Categories
-    const categories = q.categories || [];
-    const setCategories = (cats) => updateQuestion(idx, 'categories', cats);
-    // Values/items
-    const values = q.values || [];
-    const setValues = (vals) => updateQuestion(idx, 'values', vals);
-    // Mapping: value index -> category index
-    const valueToCategory = q.valueToCategory || [];
-    const setValueToCategory = (arr) => updateQuestion(idx, 'valueToCategory', arr);
-
-    // Add/remove/edit categories
-    const addCategory = () => setCategories([...categories, '']);
-    const updateCategory = (i, val) => {
-      const newCats = [...categories];
-      newCats[i] = val;
-      setCategories(newCats);
-    };
-    const removeCategory = (i) => {
-      const newCats = categories.filter((_, idx) => idx !== i);
-      setCategories(newCats);
-      // Remove mapping for deleted category
-      setValueToCategory(valueToCategory.map(catIdx => catIdx === i ? null : catIdx > i ? catIdx - 1 : catIdx));
-    };
-
-    // Add/remove/edit values
-    const addValue = () => {
-      setValues([...values, '']);
-      setValueToCategory([...valueToCategory, null]);
-    };
-    const updateValue = (i, val) => {
-      const newVals = [...values];
-      newVals[i] = val;
-      setValues(newVals);
-    };
-    const removeValue = (i) => {
-      setValues(values.filter((_, idx) => idx !== i));
-      setValueToCategory(valueToCategory.filter((_, idx) => idx !== i));
-    };
-
-    // Set correct category for a value
-    const setValueCategory = (valIdx, catIdx) => {
-      const arr = [...valueToCategory];
-      arr[valIdx] = catIdx;
-      setValueToCategory(arr);
-    };
-
+  // Image-based MCQ (no category/value, just image + options)
+  if (q.type === 'categorize') {
     return (
       <div className="space-y-4">
         <div>
-          <div className="font-semibold mb-1">Categories:</div>
-          {categories.map((cat, i) => (
-            <div key={i} className="flex items-center mb-1">
-              <input
-                className="border p-1 mr-2"
-                value={cat}
-                onChange={e => updateCategory(i, e.target.value)}
-                placeholder={`Category ${i + 1}`}
-              />
-              <button className="text-red-600" onClick={() => removeCategory(i)}>Remove</button>
-            </div>
-          ))}
-          <button className="bg-blue-400 text-white px-2 py-1 rounded" onClick={addCategory}>Add Category</button>
+          <label className="block mb-2 font-semibold text-gray-700">Question Image</label>
+          <input type="file" accept="image/*" onChange={e => handleQuestionImage(idx, e)} className="mb-2" />
+          {q.image && (
+            <img
+              src={q.image.startsWith('/uploads/') ? `http://localhost:5000${q.image}` : q.image}
+              alt="Question"
+              className="mt-2 max-h-32 rounded-xl shadow"
+            />
+          )}
         </div>
-        <div>
-          <div className="font-semibold mb-1">Values/Items:</div>
-          {values.map((val, i) => (
-            <div key={i} className="flex items-center mb-1 gap-2">
-              <input
-                className="border p-1 mr-2"
-                value={val}
-                onChange={e => updateValue(i, e.target.value)}
-                placeholder={`Value ${i + 1}`}
-              />
-              <select
-                className="border p-1"
-                value={valueToCategory[i] ?? ''}
-                onChange={e => setValueCategory(i, e.target.value === '' ? null : Number(e.target.value))}
-              >
-                <option value="">-- Correct Category --</option>
-                {categories.map((cat, j) => (
-                  <option key={j} value={j}>{cat}</option>
-                ))}
-              </select>
-              <button className="text-red-600" onClick={() => removeValue(i)}>Remove</button>
-            </div>
-          ))}
-          <button className="bg-blue-400 text-white px-2 py-1 rounded" onClick={addValue}>Add Value</button>
-        </div>
+        <OptionsBuilder
+          options={q.options || []}
+          setOptions={opts => updateQuestion(idx, 'options', opts)}
+          answer={q.answer}
+          setAnswer={ans => updateQuestion(idx, 'answer', ans)}
+        />
       </div>
     );
   }

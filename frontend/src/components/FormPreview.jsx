@@ -123,7 +123,13 @@ const FormPreview = ({ formId, onBack }) => {
         <button className="mb-6 text-blue-600 font-semibold hover:underline" onClick={onBack}>← Back</button>
       )}
       <h2 className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-400 drop-shadow-lg tracking-tight">{form.title}</h2>
-      {form.headerImage && <img src={form.headerImage} alt="Header" className="mb-6 max-h-56 rounded-xl shadow" />}
+      {form.headerImage && (
+        <img
+          src={form.headerImage.startsWith('/uploads/') ? `http://localhost:5000${form.headerImage}` : form.headerImage}
+          alt="Header"
+          className="mb-6 max-h-56 rounded-xl shadow"
+        />
+      )}
       <form onSubmit={e => { e.preventDefault(); handleSubmit(); }}>
         <DragDropContext onDragEnd={handleDragEnd}>
           {form.questions.map((q, idx) => (
@@ -145,187 +151,57 @@ const FormPreview = ({ formId, onBack }) => {
 
 // Memoized Question component
 const Question = React.memo(({ q, idx, answers, dragOptions, handleChange }) => {
-  return (
-  <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md">
-      <div className="font-semibold mb-1">{q.text}</div>
-      {q.image && <img src={q.image} alt="Q" className="mb-2 max-h-24" />}
-
-      {q.type === 'cloze' && q.blanks?.length > 0 && (
-        <>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            {q.text.split('_____').map((part, i) => (
-              <React.Fragment key={i}>
-                <span>{part}</span>
-                {i < q.blanks.length && (
-                  <Droppable droppableId={`blank-${idx}-${i}`} direction="vertical">
-                    {(provided, snapshot) => (
-                      <span
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`inline-block min-w-[60px] min-h-[32px] border-b-2 border-blue-400 mx-1 px-1 align-middle bg-white ${snapshot.isDraggingOver ? 'bg-blue-100' : ''}`}
-                      >
-                        {answers[idx]?.[i] && (
-                          <Draggable draggableId={`cloze__${idx}__${i}`} index={0}>
-                            {(provided) => (
-                              <span
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="inline-block px-2 py-1 bg-blue-200 rounded cursor-move"
-                              >
-                                {answers[idx][i]}
-                              </span>
-                            )}
-                          </Draggable>
-                        )}
-                        {provided.placeholder}
-                      </span>
-                    )}
-                  </Droppable>
-                )}
-              </React.Fragment>
+  // Early return for image MCQ (categorize)
+  if (
+    q.type === "categorize" &&
+    (!q.categories || q.categories.length === 0) &&
+    (!q.values || q.values.length === 0)
+  ) {
+    return (
+      <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md">
+        <div className="font-semibold mb-1">{q.text}</div>
+        {q.image && (
+          <img
+            src={q.image.startsWith("/uploads/") ? `http://localhost:5000${q.image}` : q.image}
+            alt="Q"
+            className="mb-2 max-h-24"
+          />
+        )}
+        {q.options?.length > 0 && (
+          <div className="flex flex-col gap-2 w-full mt-2 mb-2">
+            {q.options.map((opt, i) => (
+              <label
+                key={i}
+                className="flex items-center mb-1 bg-white border border-blue-100 rounded-lg px-4 py-2 shadow-sm cursor-pointer transition hover:bg-blue-50 text-left w-full"
+              >
+                <input
+                  type="radio"
+                  name={`q${idx}`}
+                  checked={answers[idx] === i}
+                  onChange={() => handleChange(idx, i)}
+                  className="mr-3 accent-blue-500"
+                />
+                <span className="text-base break-words">{opt}</span>
+              </label>
             ))}
           </div>
-          <div className="mb-2">
-            <div className="font-semibold text-sm mb-1">Options:</div>
-            <Droppable droppableId={`options-${idx}`} direction="horizontal">
-              {(provided, snapshot) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={`flex flex-wrap gap-2 min-h-[40px] ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}
-                >
-                  {dragOptions[idx]?.map((opt, i) => (
-                    <Draggable key={`opt-${idx}-${i}`} draggableId={`cloze__${idx}__opt-${i}`} index={i}>
-                      {(provided) => (
-                        <span
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="inline-block px-2 py-1 bg-blue-100 rounded cursor-move border"
-                        >
-                          {opt}
-                        </span>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </div>
-        </>
-      )}
+        )}
+      </div>
+    );
+  }
 
-      {(q.type === 'categorize' || q.type === 'category') && q.categories?.length > 0 && q.values?.length > 0 && (
-        <div className="flex flex-row gap-8 mb-8 items-start w-full">
-          <Droppable droppableId={`cat-pool-${idx}`} direction="vertical">
-            {(provided, snapshot) => {
-              const poolVals = answers[idx]?.pool || [];
-              return (
-                <div ref={provided.innerRef} {...provided.droppableProps} className="min-w-[160px] min-h-[60px] bg-gray-100 p-4 rounded-lg shadow-inner flex flex-col gap-3 items-center border-2 border-dashed border-gray-300">
-                  <div className="font-semibold text-gray-600 mb-2">Unsorted</div>
-                  {poolVals.map((vIdx, i) => (
-                    <Draggable key={`cat-${idx}-${vIdx}`} draggableId={`cat__${idx}__${vIdx}`} index={i}>
-                      {(provided) => (
-                        <span
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="inline-block px-4 py-2 bg-gradient-to-r from-blue-100 to-blue-200 rounded-lg cursor-move border border-blue-300 shadow text-blue-800 font-medium text-center mb-2"
-                        >
-                          {q.values[vIdx]}
-                        </span>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                  <div className="text-xs text-gray-400 w-full mt-2">Drag to a category</div>
-                </div>
-              );
-            }}
-          </Droppable>
-
-          <div className="flex flex-row gap-6 flex-1">
-            {q.categories.map((cat, cIdx) => {
-              const catVals = answers[idx]?.[cIdx] || [];
-              return (
-                <Droppable key={cIdx} droppableId={`cat-${idx}-${cIdx}`} direction="vertical">
-                  {(provided, snapshot) => (
-                    <div ref={provided.innerRef} {...provided.droppableProps} className={`min-w-[160px] min-h-[60px] bg-white border-2 border-blue-400 rounded-lg p-4 shadow flex flex-col gap-3 items-center ${snapshot.isDraggingOver ? 'bg-blue-50 border-blue-600' : ''}`}>
-                      <div className="font-bold text-blue-700 mb-2 text-center">{cat}</div>
-                      {catVals.map((vIdx, i) => (
-                        <Draggable key={`cat-${idx}-${vIdx}`} draggableId={`cat__${idx}__${vIdx}`} index={i}>
-                          {(provided) => (
-                            <span
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className="inline-block px-4 py-2 bg-gradient-to-r from-blue-200 to-blue-300 rounded-lg cursor-move border border-blue-400 shadow text-blue-900 font-semibold text-center mb-2"
-                            >
-                              {q.values[vIdx]}
-                            </span>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              );
-            })}
-          </div>
-        </div>
+  // Default rendering for other types
+  return (
+    <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md">
+      <div className="font-semibold mb-1">{q.text}</div>
+      {q.image && (
+        <img
+          src={q.image.startsWith("/uploads/") ? `http://localhost:5000${q.image}` : q.image}
+          alt="Q"
+          className="mb-2 max-h-24"
+        />
       )}
-
-      {q.type === 'comprehension' && q.options?.length > 0 && (
-        <div className="flex flex-col gap-2 w-full mt-2 mb-2">
-          {q.options.map((opt, i) => (
-            <label
-              key={i}
-              className="flex items-center mb-1 bg-white border border-blue-100 rounded-lg px-4 py-2 shadow-sm cursor-pointer transition hover:bg-blue-50 text-left w-full"
-            >
-              <input
-                type="radio"
-                name={`q${idx}`}
-                checked={answers[idx] === i}
-                onChange={() => handleChange(idx, i)}
-                className="mr-3 accent-blue-500"
-              />
-              <span className="text-base break-words">{opt}</span>
-            </label>
-          ))}
-        </div>
-      )}
-      {q.type === 'passage' && (
-        <div className="mb-4">
-          <div className="bg-gray-100 p-3 rounded mb-3 whitespace-pre-line border border-gray-300">
-            {q.passage}
-          </div>
-          {q.subQuestions?.map((sub, subIdx) => (
-            <div key={subIdx} className="mb-3">
-              <div className="font-semibold mb-1">{sub.text}</div>
-              {sub.options?.map((opt, i) => (
-                <label key={i} className="flex items-center mb-1">
-                  <input
-                    type="radio"
-                    name={`q${idx}-sub${subIdx}`}
-                    checked={answers[idx]?.[subIdx] === i}
-                    onChange={() => {
-                      const newAns = Array.isArray(answers[idx]) ? [...answers[idx]] : [];
-                      newAns[subIdx] = i;
-                      handleChange(idx, newAns);
-                    }}
-                    className="mr-2"
-                  />
-                  {opt}
-                </label>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-
+      {/* Only fallback input for unknown types, remove invalid placeholders */}
       {!['cloze', 'categorize', 'category', 'comprehension'].includes(q.type) && (
         <input className="border p-1 w-full" placeholder="Your answer" value={answers[idx]} onChange={e => handleChange(idx, e.target.value)} />
       )}

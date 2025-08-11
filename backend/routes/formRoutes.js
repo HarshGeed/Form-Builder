@@ -28,8 +28,13 @@ router.post('/upload-question-image', upload.single('questionImage'), (req, res)
 // Create a new form
 router.post('/', upload.single('headerImage'), async (req, res) => {
   try {
-    const { title, questions } = req.body;
-    const headerImage = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const { title, questions, headerImage: headerImageBody } = req.body;
+    let headerImage = undefined;
+    if (req.file) {
+      headerImage = `/uploads/${req.file.filename}`;
+    } else if (headerImageBody) {
+      headerImage = headerImageBody;
+    }
     const form = new Form({
       title,
       headerImage,
@@ -67,10 +72,14 @@ router.get('/:id', async (req, res) => {
 // Update a form
 router.put('/:id', upload.single('headerImage'), async (req, res) => {
   try {
-    const { title, questions } = req.body;
+    const { title, questions, headerImage: headerImageBody } = req.body;
     const updateData = { title };
     if (questions) updateData.questions = JSON.parse(questions);
-    if (req.file) updateData.headerImage = `/uploads/${req.file.filename}`;
+    if (req.file) {
+      updateData.headerImage = `/uploads/${req.file.filename}`;
+    } else if (headerImageBody) {
+      updateData.headerImage = headerImageBody;
+    }
     const form = await Form.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!form) return res.status(404).json({ error: 'Form not found' });
     res.json(form);

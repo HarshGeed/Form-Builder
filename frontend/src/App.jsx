@@ -43,9 +43,9 @@ function App() {
         setUser(userObj);
         localStorage.setItem('user', JSON.stringify(userObj));
       }
-      // If login was triggered by /fill/:formId, redirect
+      // If login was triggered by /:formId, redirect
       if (pendingFillFormId) {
-        window.location.href = `/fill/${pendingFillFormId}`;
+        window.location.href = `/${pendingFillFormId}`;
       }
     } catch (err) {
       alert(err.response?.data?.error || 'Authentication failed');

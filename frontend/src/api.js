@@ -15,7 +15,7 @@ export const deleteForm = (id) => axios.delete(`${API_BASE}/forms/${id}`);
 export const uploadHeaderImage = (file) => {
   const formData = new FormData();
   formData.append('headerImage', file);
-  return axios.post(`${API_BASE}/forms`, formData);
+  return axios.post(`${API_BASE}/forms/upload-header-image`, formData);
 };
 
 export const uploadQuestionImage = (file) => {

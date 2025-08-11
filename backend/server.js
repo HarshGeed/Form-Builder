@@ -11,10 +11,13 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
+
 const formRoutes = require('./routes/formRoutes');
 const responseRoutes = require('./routes/responseRoutes');
 const authRoutes = require('./routes/authRoutes');
+const headerImageUpload = require('./routes/headerImageUpload');
 app.use('/api/forms', formRoutes);
+app.use('/api/forms', headerImageUpload); // must come after formRoutes
 app.use('/api/responses', responseRoutes);
 app.use('/api/auth', authRoutes);
 

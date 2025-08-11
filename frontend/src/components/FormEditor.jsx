@@ -42,11 +42,8 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
     const data = new FormData();
     data.append('title', title);
     data.append('questions', JSON.stringify(questions));
-    if (headerImage && headerImage.startsWith('blob:')) {
-      // Already uploaded
-    } else if (headerImage) {
-      // If headerImage is a file, append it
-      // Not needed, handled by uploadHeaderImage
+    if (headerImage) {
+      data.append('headerImage', headerImage);
     }
     if (formId) {
       await updateForm(formId, data);
@@ -77,7 +74,13 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
       <div className="mb-8">
         <label className="block mb-2 font-semibold text-gray-700">Header Image</label>
         <input type="file" accept="image/*" onChange={handleHeaderImage} className="mb-2" />
-        {headerImage && <img src={headerImage} alt="Header" className="mt-2 max-h-40 rounded-xl shadow" />}
+        {headerImage && (
+          <img
+            src={headerImage.startsWith('/uploads/') ? `http://localhost:5000${headerImage}` : headerImage}
+            alt="Header"
+            className="mt-2 max-h-40 rounded-xl shadow"
+          />
+        )}
       </div>
       <div>
         <h3 className="font-bold mb-4 text-xl text-blue-700">Questions</h3>
@@ -103,6 +106,13 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
               value={q.text}
               onChange={e => updateQuestion(idx, 'text', e.target.value)}
             />
+            {q.image && (
+              <img
+                src={q.image.startsWith('/uploads/') ? `http://localhost:5000${q.image}` : q.image}
+                alt="Question"
+                className="mb-2 max-h-24 rounded shadow"
+              />
+            )}
             <QuestionAdvancedUI
               q={q}
               idx={idx}
