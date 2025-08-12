@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { createForm, updateForm, uploadHeaderImage, uploadQuestionImage, getForm } from '../api';
 import QuestionAdvancedUI from './QuestionAdvancedUI';
 
-const defaultQuestion = { type: 'categorize', text: '', image: '', options: [], passage: '', blanks: [], categories: [], questions: [], subQuestions: [] };
+const defaultQuestion = { type: 'categorize', text: '', image: '', options: [], passage: '', blanks: [], categories: [], questions: [], subQuestions: [], marks: 1 };
 
 const FormEditor = ({ formId, onSave, onCancel }) => {
   const [title, setTitle] = useState('');
@@ -95,22 +95,40 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
       </div>
       <div>
         <h3 className="font-bold mb-4 text-xl text-blue-700">Questions</h3>
-        {questions.map((q, idx) => (
-          <div key={idx} className="border border-blue-100 p-6 mb-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md relative">
-            <div className="absolute top-4 right-4">
-              <button className="text-red-500 font-bold text-lg hover:scale-110 transition" onClick={() => removeQuestion(idx)} title="Remove">&times;</button>
-            </div>
-            <select
-              className="border border-blue-100 p-2 mb-3 rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={q.type}
-              onChange={e => updateQuestion(idx, 'type', e.target.value)}
-            >
-              <option value="categorize">Image MCQ</option>
-              <option value="category">Categorization</option>
-              <option value="cloze">Fill in the Blank</option>
-              <option value="comprehension">Normal MCQ</option>
-              <option value="passage">Comprehension (Passage + Questions)</option>
-            </select>
+          {questions.map((q, idx) => (
+            <div key={idx} className="border border-blue-100 p-6 mb-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md relative">
+              {/* Serial number */}
+              <div className="absolute left-2 top-2 flex items-center justify-center w-12 h-12 text-lg font-bold text-blue-500 bg-white/90 rounded-lg shadow select-none border border-blue-200 z-20">
+                {idx + 1}.
+              </div>
+              <div style={{ marginLeft: '56px' }}>
+              {/* Remove button */}
+              <div className="absolute top-4 right-4">
+                <button className="text-red-500 font-bold text-lg hover:scale-110 transition" onClick={() => removeQuestion(idx)} title="Remove">&times;</button>
+              </div>
+              {/* Marks input */}
+              <div className="absolute right-16 top-4 flex items-center gap-1">
+                <span className="text-gray-500 font-semibold">Marks:</span>
+                <input
+                  type="number"
+                  min={1}
+                  className="w-16 border rounded px-2 py-1 text-center font-bold text-blue-600 bg-white/80"
+                  value={q.marks || ''}
+                  onChange={e => updateQuestion(idx, 'marks', Math.max(1, Number(e.target.value) || 1))}
+                  style={{ MozAppearance: 'textfield' }}
+                />
+              </div>
+              <select
+                className="border border-blue-100 p-2 mb-3 rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={q.type}
+                onChange={e => updateQuestion(idx, 'type', e.target.value)}
+              >
+                <option value="categorize">Image MCQ</option>
+                <option value="category">Categorization</option>
+                <option value="cloze">Fill in the Blank</option>
+                <option value="comprehension">Normal MCQ</option>
+                <option value="passage">Comprehension (Passage + Questions)</option>
+              </select>
             <input
               className="border border-blue-100 p-2 mb-3 w-full rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Question text"
@@ -130,6 +148,7 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
               updateQuestion={updateQuestion}
               handleQuestionImage={handleQuestionImage}
             />
+            </div>
           </div>
         ))}
         <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-purple-600 transition" onClick={addQuestion}>Add Question</button>

@@ -14,6 +14,7 @@ const QuestionSchema = new mongoose.Schema({
   valueToCategory: { type: Array }, // for category (answer key)
   questions: { type: Array }, // for comprehension sub-questions (legacy)
   subQuestions: { type: Array }, // for passage type (array of {text, options, answer})
+  marks: { type: Number, default: 1 }, // marks for this question
 });
 const FormSchema = new mongoose.Schema({
   title: { type: String, required: true },

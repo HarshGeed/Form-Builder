@@ -49,8 +49,18 @@ const FormPreview = ({ formId, onBack }) => {
     if (!result.destination) return;
     const { source, destination, draggableId } = result;
 
-    const [qType, qIdxStr] = draggableId.split('__');
-    const qIdx = parseInt(qIdxStr, 10);
+    // For categorization, draggableId is 'cat-val-<qIdx>-<valIdx>'
+    let qIdx, valIdx;
+    if (draggableId.startsWith('cat-val-')) {
+      // Format: cat-val-<qIdx>-<valIdx>
+      const parts = draggableId.split('-');
+      qIdx = parseInt(parts[2], 10);
+      valIdx = parseInt(parts[3], 10);
+    } else {
+      // For cloze: <qType>__<qIdx>
+      const [qType, qIdxStr] = draggableId.split('__');
+      qIdx = parseInt(qIdxStr, 10);
+    }
     const question = form.questions[qIdx];
 
     if (question.type === 'cloze') {
@@ -89,6 +99,7 @@ const FormPreview = ({ formId, onBack }) => {
       }
     } 
     else if (question.type === 'categorize' || question.type === 'category') {
+      // For categorization, move valueIdx from source list to destination list
       const getListKey = (droppableId) => {
         if (droppableId === `cat-pool-${qIdx}`) return 'pool';
         if (droppableId.startsWith(`cat-${qIdx}-`)) return parseInt(droppableId.split('-').pop(), 10);
@@ -100,9 +111,14 @@ const FormPreview = ({ formId, onBack }) => {
 
       setAnswers(prev => {
         const newAns = { ...prev[qIdx], [srcKey]: [...prev[qIdx][srcKey]], [destKey]: [...prev[qIdx][destKey]] };
-        const valueIdx = newAns[srcKey][source.index];
+        // Remove valueIdx from srcKey list (by index)
+        const movedValIdx = newAns[srcKey][source.index];
         newAns[srcKey].splice(source.index, 1);
-        newAns[destKey].splice(destination.index, 0, valueIdx);
+        // Prevent duplicate: remove from destKey if already present
+        const existingIdx = newAns[destKey].indexOf(movedValIdx);
+        if (existingIdx !== -1) newAns[destKey].splice(existingIdx, 1);
+        // Insert into destKey at destination.index
+        newAns[destKey].splice(destination.index, 0, movedValIdx);
         return prev.map((a, i) => i === qIdx ? newAns : a);
       });
     }
@@ -151,15 +167,93 @@ const FormPreview = ({ formId, onBack }) => {
 
 // Memoized Question component
 const Question = React.memo(({ q, idx, answers, dragOptions, handleChange }) => {
-  // Early return for image MCQ (categorize)
-  if (
-    q.type === "categorize" &&
-    (!q.categories || q.categories.length === 0) &&
-    (!q.values || q.values.length === 0)
-  ) {
+  // Categorization drag-and-drop preview for 'category' and 'categorize' with categories/values
+  if ((q.type === 'category' || q.type === 'categorize') && q.categories && q.categories.length > 0 && q.values && q.values.length > 0) {
+    const state = answers[idx];
     return (
-      <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md">
-        <div className="font-semibold mb-1">{q.text}</div>
+      <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md relative">
+        {/* Serial number */}
+        <div className="absolute left-2 top-2 flex items-center justify-center w-12 h-12 text-lg font-bold text-blue-500 bg-white/90 rounded-lg shadow select-none border border-blue-200 z-20">
+          {idx + 1}.
+        </div>
+        {/* Marks */}
+        <div className="absolute right-6 top-4 text-base font-bold text-green-600 bg-white/80 px-3 py-1 rounded shadow">{q.marks ? `${q.marks} mark${q.marks > 1 ? 's' : ''}` : ''}</div>
+        <div style={{ marginLeft: '56px' }}>
+          <div className="font-semibold mb-1 mt-2">{q.text}</div>
+          <div className="flex flex-row flex-wrap gap-4 mt-4 items-stretch w-full">
+          {/* Pool of values to drag */}
+          <Droppable droppableId={`cat-pool-${idx}`} direction="vertical">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className={`min-w-[180px] grow bg-white/70 border border-blue-200 rounded-xl p-3 shadow-inner ${snapshot.isDraggingOver ? 'ring-2 ring-blue-400' : ''}`}
+              >
+                <div className="font-semibold text-blue-500 mb-2">Pool</div>
+                {state.pool.map((valIdx, i) => (
+                  <Draggable key={valIdx} draggableId={`cat-val-${idx}-${valIdx}`} index={i}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className={`mb-2 px-3 py-2 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg shadow cursor-move select-none ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                      >
+                        {q.values[valIdx]}
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+          {/* Category blocks */}
+          {q.categories.map((cat, catIdx) => (
+            <Droppable key={catIdx} droppableId={`cat-${idx}-${catIdx}`} direction="vertical">
+              {(provided, snapshot) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className={`min-w-[180px] grow bg-white/70 border border-purple-200 rounded-xl p-3 shadow-inner ${snapshot.isDraggingOver ? 'ring-2 ring-purple-400' : ''}`}
+                >
+                  <div className="font-semibold text-purple-500 mb-2">{cat}</div>
+                  {state[catIdx].map((valIdx, i) => (
+                    <Draggable key={valIdx} draggableId={`cat-val-${idx}-${valIdx}`} index={i}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`mb-2 px-3 py-2 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg shadow cursor-move select-none ${snapshot.isDragging ? 'ring-2 ring-purple-400' : ''}`}
+                        >
+                          {q.values[valIdx]}
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          ))}
+        </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default rendering for other types
+  return (
+    <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md relative">
+      {/* Serial number */}
+      <div className="absolute left-2 top-2 flex items-center justify-center w-12 h-12 text-lg font-bold text-blue-500 bg-white/90 rounded-lg shadow select-none border border-blue-200 z-20">
+        {idx + 1}.
+      </div>
+      {/* Marks */}
+      <div className="absolute right-6 top-4 text-base font-bold text-green-600 bg-white/80 px-3 py-1 rounded shadow">{q.marks ? `${q.marks} mark${q.marks > 1 ? 's' : ''}` : ''}</div>
+      <div style={{ marginLeft: '56px' }}>
+        <div className="font-semibold mb-1 mt-2">{q.text}</div>
         {q.image && (
           <img
             src={q.image.startsWith("/uploads/") ? `http://localhost:5000${q.image}` : q.image}
@@ -167,44 +261,11 @@ const Question = React.memo(({ q, idx, answers, dragOptions, handleChange }) => 
             className="mb-2 max-h-24"
           />
         )}
-        {q.options?.length > 0 && (
-          <div className="flex flex-col gap-2 w-full mt-2 mb-2">
-            {q.options.map((opt, i) => (
-              <label
-                key={i}
-                className="flex items-center mb-1 bg-white border border-blue-100 rounded-lg px-4 py-2 shadow-sm cursor-pointer transition hover:bg-blue-50 text-left w-full"
-              >
-                <input
-                  type="radio"
-                  name={`q${idx}`}
-                  checked={answers[idx] === i}
-                  onChange={() => handleChange(idx, i)}
-                  className="mr-3 accent-blue-500"
-                />
-                <span className="text-base break-words">{opt}</span>
-              </label>
-            ))}
-          </div>
+        {/* Only fallback input for unknown types, remove invalid placeholders */}
+        {!['cloze', 'categorize', 'category', 'comprehension'].includes(q.type) && (
+          <input className="border p-1 w-full" placeholder="Your answer" value={answers[idx]} onChange={e => handleChange(idx, e.target.value)} />
         )}
       </div>
-    );
-  }
-
-  // Default rendering for other types
-  return (
-    <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md">
-      <div className="font-semibold mb-1">{q.text}</div>
-      {q.image && (
-        <img
-          src={q.image.startsWith("/uploads/") ? `http://localhost:5000${q.image}` : q.image}
-          alt="Q"
-          className="mb-2 max-h-24"
-        />
-      )}
-      {/* Only fallback input for unknown types, remove invalid placeholders */}
-      {!['cloze', 'categorize', 'category', 'comprehension'].includes(q.type) && (
-        <input className="border p-1 w-full" placeholder="Your answer" value={answers[idx]} onChange={e => handleChange(idx, e.target.value)} />
-      )}
     </div>
   );
 });
