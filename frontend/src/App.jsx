@@ -17,6 +17,16 @@ function App() {
     const stored = localStorage.getItem('user');
     return stored ? JSON.parse(stored) : null;
   }); // null = not logged in
+
+  // Keep user state in sync with localStorage (fixes logout not updating UI)
+  React.useEffect(() => {
+    const syncUser = () => {
+      const stored = localStorage.getItem('user');
+      setUser(stored ? JSON.parse(stored) : null);
+    };
+    window.addEventListener('storage', syncUser);
+    return () => window.removeEventListener('storage', syncUser);
+  }, []);
   // For redirect after login
   const [pendingFillFormId, setPendingFillFormId] = useState(null);
 
