@@ -48,58 +48,46 @@ const FormPreview = ({ formId, onBack }) => {
   const handleDragEnd = useCallback((result) => {
     if (!result.destination) return;
     const { source, destination, draggableId } = result;
-
-    // For categorization, draggableId is 'cat-val-<qIdx>-<valIdx>'
-    let qIdx;
-    if (draggableId.startsWith('cat-val-')) {
-      // Format: cat-val-<qIdx>-<valIdx>
+    // Cloze drag: draggableId is 'cloze-opt-<idx>-<opt>' for pool, 'cloze__<idx>__<blankIdx>__<value>' for filled blank
+    if (draggableId.startsWith('cloze-opt-')) {
+      // Drag from pool to blank
       const parts = draggableId.split('-');
-      qIdx = parseInt(parts[2], 10);
-    } else {
-      // For cloze: <qType>__<qIdx>
-      // Example: cloze__2
-      const parts = draggableId.split('__');
-      qIdx = parseInt(parts[1], 10);
-    }
-    const question = form.questions[qIdx];
-
-    if (question.type === 'cloze') {
-  // const blankCount = question.blanks.length; // Removed unused variable
-
-      // Cloze logic
-      if (source.droppableId === `options-${qIdx}` && destination.droppableId.startsWith(`blank-${qIdx}-`)) {
+      const qIdx = parseInt(parts[2], 10);
+      const option = parts.slice(3).join('-');
+      if (destination.droppableId.startsWith(`blank-${qIdx}-`)) {
         const blankIdx = parseInt(destination.droppableId.split('-').pop(), 10);
-        const option = dragOptions[qIdx][source.index];
         setAnswers(prev => {
           const newAnswers = prev.map((a, i) => i === qIdx ? [...a] : a);
           newAnswers[qIdx][blankIdx] = option;
           return newAnswers;
         });
-        setDragOptions(prev => prev.map((opts, i) => i === qIdx ? opts.filter((_, idx) => idx !== source.index) : opts));
-      } 
-      else if (source.droppableId.startsWith(`blank-${qIdx}-`) && destination.droppableId.startsWith(`blank-${qIdx}-`)) {
-        const fromIdx = parseInt(source.droppableId.split('-').pop(), 10);
-        const toIdx = parseInt(destination.droppableId.split('-').pop(), 10);
-        setAnswers(prev => {
-          const newAnswers = prev.map((a, i) => i === qIdx ? [...a] : a);
-          [newAnswers[qIdx][fromIdx], newAnswers[qIdx][toIdx]] = [newAnswers[qIdx][toIdx], newAnswers[qIdx][fromIdx]];
-          return newAnswers;
-        });
-      } 
-      else if (source.droppableId.startsWith(`blank-${qIdx}-`) && destination.droppableId === `options-${qIdx}`) {
-        const blankIdx = parseInt(source.droppableId.split('-').pop(), 10);
-        const option = answers[qIdx][blankIdx];
-        if (!option) return;
+      }
+    } else if (draggableId.startsWith('cloze__')) {
+      // Drag from blank to pool or to another blank
+      const parts = draggableId.split('__');
+      const qIdx = parseInt(parts[1], 10);
+      const blankIdx = parseInt(parts[2], 10);
+      const value = parts.slice(3).join('__');
+      if (destination.droppableId === `options-${qIdx}`) {
+        // Remove from blank, add back to pool
         setAnswers(prev => {
           const newAnswers = prev.map((a, i) => i === qIdx ? [...a] : a);
           newAnswers[qIdx][blankIdx] = null;
           return newAnswers;
         });
-        setDragOptions(prev => prev.map((opts, i) => i === qIdx ? [...opts, option] : opts));
+      } else if (destination.droppableId.startsWith(`blank-${qIdx}-`)) {
+        // Move between blanks
+        const toIdx = parseInt(destination.droppableId.split('-').pop(), 10);
+        setAnswers(prev => {
+          const newAnswers = prev.map((a, i) => i === qIdx ? [...a] : a);
+          [newAnswers[qIdx][blankIdx], newAnswers[qIdx][toIdx]] = [newAnswers[qIdx][toIdx], newAnswers[qIdx][blankIdx]];
+          return newAnswers;
+        });
       }
-    } 
-    else if (question.type === 'categorize' || question.type === 'category') {
-      // For categorization, move valueIdx from source list to destination list
+    } else if (draggableId.startsWith('cat-val-')) {
+      // Categorization drag
+      const parts = draggableId.split('-');
+      const qIdx = parseInt(parts[2], 10);
       const getListKey = (droppableId) => {
         if (droppableId === `cat-pool-${qIdx}`) return 'pool';
         if (droppableId.startsWith(`cat-${qIdx}-`)) return parseInt(droppableId.split('-').pop(), 10);
@@ -108,7 +96,6 @@ const FormPreview = ({ formId, onBack }) => {
       const srcKey = getListKey(source.droppableId);
       const destKey = getListKey(destination.droppableId);
       if (srcKey == null || destKey == null) return;
-
       setAnswers(prev => {
         const newAns = { ...prev[qIdx], [srcKey]: [...prev[qIdx][srcKey]], [destKey]: [...prev[qIdx][destKey]] };
         // Remove valueIdx from srcKey list (by index)
@@ -122,7 +109,7 @@ const FormPreview = ({ formId, onBack }) => {
         return prev.map((a, i) => i === qIdx ? newAns : a);
       });
     }
-  }, [answers, dragOptions, form]);
+  }, [answers]);
 
   const handleSubmit = async () => {
     await submitResponse({ formId, answers });
@@ -178,6 +165,7 @@ const Question = React.memo(({ q, idx, answers, handleChange }) => {
         {/* Marks */}
         <div className="absolute right-6 top-4 text-base font-bold text-green-600 bg-white/80 px-3 py-1 rounded shadow">{q.marks ? `${q.marks} mark${q.marks > 1 ? 's' : ''}` : ''}</div>
         <div style={{ marginLeft: '56px' }}>
+          {q.text && <div className="font-semibold mb-2 text-lg">{q.text}</div>}
           <div className="font-semibold mb-1 mt-2">Passage:</div>
           <div className="bg-white/80 border border-blue-100 rounded-xl p-4 mb-4 whitespace-pre-line">{q.passage}</div>
           <div className="space-y-6">
