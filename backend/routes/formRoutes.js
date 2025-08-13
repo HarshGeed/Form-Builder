@@ -80,8 +80,8 @@ router.post('/', auth, upload.none(), async (req, res) => {
 
 // Get all forms
 
-// Get all forms
-router.get('/', async (req, res) => {
+// Get all forms (protected)
+router.get('/', auth, async (req, res) => {
   try {
     const forms = await Form.find();
     res.json(forms);
@@ -90,8 +90,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get a single form by ID
-router.get('/:id', async (req, res) => {
+// Get a single form by ID (protected)
+router.get('/:id', auth, async (req, res) => {
   try {
     const form = await Form.findById(req.params.id);
     if (!form) return res.status(404).json({ error: 'Form not found' });
