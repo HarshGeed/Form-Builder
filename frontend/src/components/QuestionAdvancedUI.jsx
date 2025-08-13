@@ -21,7 +21,7 @@ function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuestionImage }) {
           </div>
           {q.image && (
             <img
-              src={q.image && q.image.startsWith('/uploads/') ? `${import.meta.env.VITE_API_BASE?.replace('/api','') || ''}${q.image}` : q.image}
+              src={q.image}
               alt="Question"
               className="mt-2 max-h-32 rounded-xl shadow"
             />

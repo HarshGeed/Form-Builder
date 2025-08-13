@@ -141,7 +141,7 @@ const FormPreview = ({ formId, onBack }) => {
       <h2 className="text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-500 to-pink-400 drop-shadow-lg tracking-tight">{form.title}</h2>
       {form.headerImage && (
         <img
-          src={form.headerImage.startsWith('/uploads/') ? `${import.meta.env.VITE_API_BASE?.replace('/api','') || ''}${form.headerImage}` : form.headerImage}
+          src={form.headerImage}
           alt="Header"
           className="mb-6 max-h-56 rounded-xl shadow"
         />
@@ -257,7 +257,7 @@ const Question = React.memo(({ q, idx, answers, handleChange }) => {
           <div className="font-semibold mb-1 mt-2">{q.text}</div>
           {q.image && (
             <img
-              src={q.image.startsWith("/uploads/") ? `${import.meta.env.VITE_API_BASE?.replace('/api','') || ''}${q.image}` : q.image}
+              src={q.image}
               alt="Q"
               className="mb-2 max-h-24"
             />
@@ -299,7 +299,7 @@ const Question = React.memo(({ q, idx, answers, handleChange }) => {
         <div className="font-semibold mb-1 mt-2">{q.text}</div>
         {q.image && (
           <img
-            src={q.image.startsWith("/uploads/") ? `${import.meta.env.VITE_API_BASE?.replace('/api','') || ''}${q.image}` : q.image}
+            src={q.image}
             alt="Q"
             className="mb-2 max-h-24"
           />

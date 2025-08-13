@@ -2,17 +2,24 @@ const express = require('express');
 const Form = require('../models/Form');
 const cloudinary = require('../utils/cloudinary');
 
+
+const upload = require('../utils/parseFormData');
 const router = express.Router();
 
-// Upload an image for a question (Cloudinary, base64 or direct URL)
-router.post('/upload-question-image', async (req, res) => {
+
+// Multer for file upload (memory only, no disk)
+const multer = require('multer');
+const memoryUpload = multer({ storage: multer.memoryStorage() });
+
+// Upload an image for a question (Cloudinary, file upload)
+router.post('/upload-question-image', memoryUpload.single('questionImage'), async (req, res) => {
   try {
-    const { image } = req.body;
-    if (!image) {
-      return res.status(400).json({ error: 'No image data provided' });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
     }
-    // Upload base64 or remote URL to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(image, {
+    // Convert buffer to base64
+    const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    const uploadResult = await cloudinary.uploader.upload(base64, {
       folder: 'form-builder/questions',
       resource_type: 'auto',
     });
@@ -22,8 +29,27 @@ router.post('/upload-question-image', async (req, res) => {
   }
 });
 
+// Upload an image for a form header (Cloudinary, file upload)
+router.post('/upload-header-image', memoryUpload.single('headerImage'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+    // Convert buffer to base64
+    const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    const uploadResult = await cloudinary.uploader.upload(base64, {
+      folder: 'form-builder/headers',
+      resource_type: 'auto',
+    });
+    res.status(200).json({ headerImage: uploadResult.secure_url });
+  } catch (err) {
+    res.status(500).json({ error: 'Cloudinary upload failed', details: err.message });
+  }
+});
+
+
 // Create a new form (header image can be base64 or direct URL)
-router.post('/', async (req, res) => {
+router.post('/', upload.none(), async (req, res) => {
   try {
     const { title, questions, headerImage: headerImageBody } = req.body;
     let headerImage;
@@ -52,6 +78,8 @@ router.post('/', async (req, res) => {
 });
 
 // Get all forms
+
+// Get all forms
 router.get('/', async (req, res) => {
   try {
     const forms = await Form.find();
@@ -61,8 +89,20 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get a single form by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const form = await Form.findById(req.params.id);
+    if (!form) return res.status(404).json({ error: 'Form not found' });
+    res.json(form);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+
 // Update a form (header image can be base64 or direct URL)
-router.put('/:id', async (req, res) => {
+router.put('/:id', upload.none(), async (req, res) => {
   try {
     const { title, questions, headerImage: headerImageBody } = req.body;
     const updateData = { title };

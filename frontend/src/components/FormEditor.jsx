@@ -24,17 +24,19 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
   const handleHeaderImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const res = await uploadHeaderImage(file);
-    setHeaderImage(res.data.headerImage || res.data.imageUrl);
+  const res = await uploadHeaderImage(file);
+  // Always use the Cloudinary URL
+  setHeaderImage(res.data.headerImage || res.data.imageUrl || '');
   };
 
   const handleQuestionImage = async (idx, e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const res = await uploadQuestionImage(file);
-    const newQuestions = [...questions];
-    newQuestions[idx].image = res.data.imageUrl;
-    setQuestions(newQuestions);
+  const res = await uploadQuestionImage(file);
+  const newQuestions = [...questions];
+  // Always use the Cloudinary URL
+  newQuestions[idx].image = res.data.imageUrl || '';
+  setQuestions(newQuestions);
   };
 
   const handleSave = async () => {
@@ -87,7 +89,7 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
         </div>
         {headerImage && (
           <img
-            src={headerImage.startsWith('/uploads/') ? `${import.meta.env.VITE_API_BASE?.replace('/api','') || ''}${headerImage}` : headerImage}
+            src={headerImage}
             alt="Header"
             className="mt-2 max-h-40 rounded-xl shadow"
           />
@@ -137,7 +139,7 @@ const FormEditor = ({ formId, onSave, onCancel }) => {
             />
             {q.image && (
               <img
-                src={q.image.startsWith('/uploads/') ? `${import.meta.env.VITE_API_BASE?.replace('/api','') || ''}${q.image}` : q.image}
+                src={q.image}
                 alt="Question"
                 className="mb-2 max-h-24 rounded shadow"
               />
