@@ -5,8 +5,8 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 export const register = (data) => axios.post(`${API_BASE}/auth/register`, data);
 export const login = (data) => axios.post(`${API_BASE}/auth/login`, data);
 
-export const getForms = () => axios.get(`${API_BASE}/forms`);
-export const getForm = (id) => axios.get(`${API_BASE}/forms/${id}`);
+export const getForms = () => axios.get(`${API_BASE}/forms`, getAuthConfig());
+export const getForm = (id) => axios.get(`${API_BASE}/forms/${id}`, getAuthConfig());
 const getAuthConfig = () => {
   const user = localStorage.getItem('user');
   if (!user) return {};
