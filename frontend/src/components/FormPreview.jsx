@@ -167,6 +167,134 @@ const FormPreview = ({ formId, onBack }) => {
 
 // Memoized Question component
 const Question = React.memo(({ q, idx, answers, handleChange }) => {
+  // Passage with sub-questions and options
+  if (q.type === 'passage' && Array.isArray(q.subQuestions)) {
+    return (
+      <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md relative">
+        {/* Serial number */}
+        <div className="absolute left-2 top-2 flex items-center justify-center w-12 h-12 text-lg font-bold text-blue-500 bg-white/90 rounded-lg shadow select-none border border-blue-200 z-20">
+          {idx + 1}.
+        </div>
+        {/* Marks */}
+        <div className="absolute right-6 top-4 text-base font-bold text-green-600 bg-white/80 px-3 py-1 rounded shadow">{q.marks ? `${q.marks} mark${q.marks > 1 ? 's' : ''}` : ''}</div>
+        <div style={{ marginLeft: '56px' }}>
+          <div className="font-semibold mb-1 mt-2">Passage:</div>
+          <div className="bg-white/80 border border-blue-100 rounded-xl p-4 mb-4 whitespace-pre-line">{q.passage}</div>
+          <div className="space-y-6">
+            {q.subQuestions.map((sub, subIdx) => (
+              <div key={subIdx} className="border border-purple-100 rounded-xl p-4 bg-white/60">
+                <div className="font-semibold mb-2">{sub.text || `Sub-question ${subIdx + 1}`}</div>
+                {Array.isArray(sub.options) && sub.options.length > 0 && (
+                  <div className="flex flex-col gap-2 w-full mt-2 mb-2">
+                    {sub.options.map((opt, i) => (
+                      <label
+                        key={i}
+                        className="flex items-center mb-1 bg-white border border-blue-100 rounded-lg px-4 py-2 shadow-sm cursor-pointer transition hover:bg-blue-50 text-left w-full"
+                      >
+                        <input
+                          type="radio"
+                          name={`q${idx}-sub${subIdx}`}
+                          checked={answers[idx]?.[subIdx] === i}
+                          onChange={() => {
+                            const newAns = Array.isArray(answers[idx]) ? [...answers[idx]] : [];
+                            newAns[subIdx] = i;
+                            handleChange(idx, newAns);
+                          }}
+                          className="mr-3 accent-blue-500"
+                        />
+                        <span className="text-base break-words">{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  // Fill in the Blank (cloze) drag-and-drop UI
+  if (q.type === 'cloze') {
+    // Find all blank positions in the text
+    const blanks = (q.text.match(/_____/g) || []);
+    const textParts = q.text.split(/_____/g);
+    const answerArr = answers[idx] || [];
+    return (
+      <div className="mb-8 border border-blue-100 p-6 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 shadow-md relative">
+        {/* Serial number */}
+        <div className="absolute left-2 top-2 flex items-center justify-center w-12 h-12 text-lg font-bold text-blue-500 bg-white/90 rounded-lg shadow select-none border border-blue-200 z-20">
+          {idx + 1}.
+        </div>
+        {/* Marks */}
+        <div className="absolute right-6 top-4 text-base font-bold text-green-600 bg-white/80 px-3 py-1 rounded shadow">{q.marks ? `${q.marks} mark${q.marks > 1 ? 's' : ''}` : ''}</div>
+        <div style={{ marginLeft: '56px' }}>
+          <div className="font-semibold mb-1 mt-2">Fill in the blanks:</div>
+          <div className="flex flex-wrap items-center gap-2 text-lg font-medium mb-4">
+            {textParts.map((part, i) => (
+              <React.Fragment key={i}>
+                <span>{part}</span>
+                {i < blanks.length && (
+                  <Droppable droppableId={`blank-${idx}-${i}`} direction="vertical">
+                    {(provided, snapshot) => (
+                      <span
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`inline-block min-w-[100px] min-h-[36px] px-2 py-1 mx-1 border-b-2 border-blue-400 bg-white/80 rounded transition ${snapshot.isDraggingOver ? 'ring-2 ring-blue-400' : ''}`}
+                      >
+                        {answerArr[i] ? (
+                          <Draggable draggableId={`cloze__${idx}__${i}__${answerArr[i]}`} index={0}>
+                            {(provided, snapshot) => (
+                              <span
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`inline-block px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 rounded shadow cursor-move select-none ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                              >
+                                {answerArr[i]}
+                              </span>
+                            )}
+                          </Draggable>
+                        ) : <span className="text-gray-400">(blank)</span>}
+                        {provided.placeholder}
+                      </span>
+                    )}
+                  </Droppable>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+          {/* Options pool */}
+          <div className="mb-2 font-semibold text-blue-700">Options:</div>
+          <Droppable droppableId={`options-${idx}`} direction="horizontal">
+            {(provided, snapshot) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className={`flex flex-wrap gap-3 min-h-[40px] bg-white/70 border border-blue-200 rounded-xl p-3 shadow-inner ${snapshot.isDraggingOver ? 'ring-2 ring-blue-400' : ''}`}
+              >
+                {(q.options || []).filter(opt => !answerArr.includes(opt)).map((opt, i) => (
+                  <Draggable key={opt} draggableId={`cloze-opt-${idx}-${opt}`} index={i}>
+                    {(provided, snapshot) => (
+                      <span
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        className={`inline-block px-3 py-1 bg-gradient-to-r from-blue-100 to-purple-100 rounded shadow cursor-move select-none ${snapshot.isDragging ? 'ring-2 ring-blue-400' : ''}`}
+                      >
+                        {opt}
+                      </span>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </div>
+      </div>
+    );
+  }
   // Categorization drag-and-drop preview for 'category' and 'categorize' with categories/values
   if ((q.type === 'category' || q.type === 'categorize') && q.categories && q.categories.length > 0 && q.values && q.values.length > 0) {
     const state = answers[idx];
