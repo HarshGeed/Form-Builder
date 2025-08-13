@@ -66,12 +66,21 @@ function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuestionImage }) {
   // Fill in the Blank (cloze)
   if (q.type === 'cloze') {
     return (
-      <ClozeBuilder
-        value={q.text || ''}
-        onChange={val => updateQuestion(idx, 'text', val)}
-        blanks={q.blanks || []}
-        setBlanks={blanks => updateQuestion(idx, 'blanks', blanks)}
-      />
+      <div className="space-y-4">
+        <ClozeBuilder
+          value={q.text || ''}
+          onChange={val => updateQuestion(idx, 'text', val)}
+          blanks={q.blanks || []}
+          setBlanks={blanks => updateQuestion(idx, 'blanks', blanks)}
+        />
+        <OptionsBuilder
+          options={q.options || []}
+          setOptions={opts => updateQuestion(idx, 'options', opts)}
+          answer={undefined} // No single answer for cloze, so skip radio
+          setAnswer={() => {}}
+        />
+        <div className="text-xs text-gray-500">Add all possible options for the blanks. These will be draggable for the user to fill in the blanks.</div>
+      </div>
     );
   }
 
@@ -89,6 +98,20 @@ function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuestionImage }) {
 
   // Comprehension with passage and sub-questions (passage)
   if (q.type === 'passage') {
+    // subQuestions: array of { text, options, answer }
+    const subQuestions = Array.isArray(q.subQuestions) ? q.subQuestions : [];
+    const updateSubQuestion = (subIdx, field, value) => {
+      const newSubs = [...subQuestions];
+      if (!newSubs[subIdx]) newSubs[subIdx] = { text: '', options: [], answer: undefined };
+      newSubs[subIdx][field] = value;
+      updateQuestion(idx, 'subQuestions', newSubs);
+    };
+    const addSubQuestion = () => {
+      updateQuestion(idx, 'subQuestions', [...subQuestions, { text: '', options: [], answer: undefined }]);
+    };
+    const removeSubQuestion = (subIdx) => {
+      updateQuestion(idx, 'subQuestions', subQuestions.filter((_, i) => i !== subIdx));
+    };
     return (
       <div className="space-y-4">
         <div>
@@ -102,13 +125,27 @@ function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuestionImage }) {
           />
         </div>
         <div>
-          <label className="block mb-2 font-semibold text-gray-700">Sub-Questions (comma separated)</label>
-          <input
-            className="border border-blue-100 p-2 mb-3 w-full rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            value={q.subQuestions ? q.subQuestions.join(', ') : ''}
-            onChange={e => updateQuestion(idx, 'subQuestions', e.target.value.split(',').map(s => s.trim()))}
-            placeholder="e.g. What is the main idea?, Who is the author?"
-          />
+          <label className="block mb-2 font-semibold text-gray-700">Sub-Questions</label>
+          {subQuestions.map((sub, subIdx) => (
+            <div key={subIdx} className="border border-blue-100 rounded-xl p-4 mb-3 bg-white/60">
+              <div className="flex items-center mb-2">
+                <input
+                  className="border border-blue-100 p-2 rounded-lg text-base bg-white/80 flex-1 mr-2"
+                  value={sub.text || ''}
+                  onChange={e => updateSubQuestion(subIdx, 'text', e.target.value)}
+                  placeholder={`Sub-question ${subIdx + 1}`}
+                />
+                <button className="text-red-500 font-bold text-lg ml-2 hover:scale-110 transition" onClick={() => removeSubQuestion(subIdx)} title="Remove">&times;</button>
+              </div>
+              <OptionsBuilder
+                options={sub.options || []}
+                setOptions={opts => updateSubQuestion(subIdx, 'options', opts)}
+                answer={sub.answer}
+                setAnswer={ans => updateSubQuestion(subIdx, 'answer', ans)}
+              />
+            </div>
+          ))}
+          <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:from-blue-600 hover:to-purple-600 transition mt-2" onClick={addSubQuestion}>Add Sub-Question</button>
         </div>
       </div>
     );
