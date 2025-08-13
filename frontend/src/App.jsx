@@ -68,6 +68,7 @@ function App() {
     localStorage.removeItem('user');
     setMode('list');
     setSelectedFormId(null);
+    window.location.reload();
   };
 
   const handleEdit = (id) => {
