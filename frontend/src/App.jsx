@@ -56,6 +56,8 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    setMode('list');
+    setSelectedFormId(null);
   };
 
   const handleEdit = (id) => {
