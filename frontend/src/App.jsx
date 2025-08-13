@@ -106,7 +106,9 @@ function App() {
           </nav>
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-xs text-gray-500 mb-2">Logged in as <span className="font-semibold">{user.email}</span></div>
+          {user && user.email ? (
+            <div className="text-xs text-gray-500 mb-2">Logged in as <span className="font-semibold">{user.email}</span></div>
+          ) : null}
           <button
             className="text-xs font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow hover:from-pink-600 hover:to-purple-600 transition border-none outline-none"
             onClick={handleLogout}
