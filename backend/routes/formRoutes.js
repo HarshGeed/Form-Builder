@@ -1,3 +1,4 @@
+const auth = require('../middleware/auth');
 const express = require('express');
 const Form = require('../models/Form');
 const cloudinary = require('../utils/cloudinary');
@@ -12,7 +13,7 @@ const multer = require('multer');
 const memoryUpload = multer({ storage: multer.memoryStorage() });
 
 // Upload an image for a question (Cloudinary, file upload)
-router.post('/upload-question-image', memoryUpload.single('questionImage'), async (req, res) => {
+router.post('/upload-question-image', auth, memoryUpload.single('questionImage'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
@@ -30,7 +31,7 @@ router.post('/upload-question-image', memoryUpload.single('questionImage'), asyn
 });
 
 // Upload an image for a form header (Cloudinary, file upload)
-router.post('/upload-header-image', memoryUpload.single('headerImage'), async (req, res) => {
+router.post('/upload-header-image', auth, memoryUpload.single('headerImage'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
@@ -49,7 +50,7 @@ router.post('/upload-header-image', memoryUpload.single('headerImage'), async (r
 
 
 // Create a new form (header image can be base64 or direct URL)
-router.post('/', upload.none(), async (req, res) => {
+router.post('/', auth, upload.none(), async (req, res) => {
   try {
     const { title, questions, headerImage: headerImageBody } = req.body;
     let headerImage;
@@ -102,7 +103,7 @@ router.get('/:id', async (req, res) => {
 
 
 // Update a form (header image can be base64 or direct URL)
-router.put('/:id', upload.none(), async (req, res) => {
+router.put('/:id', auth, upload.none(), async (req, res) => {
   try {
     const { title, questions, headerImage: headerImageBody } = req.body;
     const updateData = { title };
@@ -131,7 +132,7 @@ router.put('/:id', upload.none(), async (req, res) => {
 });
 
 // Update a specific question in a form
-router.put('/:formId/questions/:questionIndex', async (req, res) => {
+router.put('/:formId/questions/:questionIndex', auth, async (req, res) => {
   try {
     const { formId, questionIndex } = req.params;
     const { question } = req.body;
@@ -150,7 +151,7 @@ router.put('/:formId/questions/:questionIndex', async (req, res) => {
 });
 
 // Delete a form
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const form = await Form.findByIdAndDelete(req.params.id);
     if (!form) return res.status(404).json({ error: 'Form not found' });
