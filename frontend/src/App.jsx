@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FormList from './components/FormList';
+import { getForms } from './api';
 import FormEditor from './components/FormEditor';
 import FormPreview from './components/FormPreview';
 import AuthForm from './components/AuthForm';
@@ -16,6 +17,12 @@ function App() {
     return stored ? JSON.parse(stored) : null;
   });
   const [pendingFillFormId, setPendingFillFormId] = useState(null);
+  const [forms, setForms] = useState([]);
+  const refreshForms = () => getForms().then(res => setForms(res.data));
+
+  useEffect(() => {
+    if (user) refreshForms();
+  }, [user]);
 
   // Keep user state in sync with localStorage
   useEffect(() => {
@@ -77,6 +84,7 @@ function App() {
   const handleBack = () => {
     setSelectedFormId(null);
     setMode('list');
+    refreshForms();
   };
   const handleCreate = () => {
     setSelectedFormId(null);
@@ -150,7 +158,7 @@ function App() {
       <main className="flex-1 p-12 bg-white/60 rounded-l-3xl shadow-xl">
         <div className="max-w-3xl mx-auto">
           {mode === 'list' && (
-            <FormList onEdit={handleEdit} onPreview={handlePreview} />
+            <FormList forms={forms} onEdit={handleEdit} onPreview={handlePreview} refreshForms={refreshForms} />
           )}
           {mode === 'edit' && (
             <FormEditor

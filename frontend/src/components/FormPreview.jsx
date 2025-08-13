@@ -67,7 +67,7 @@ const FormPreview = ({ formId, onBack }) => {
       const parts = draggableId.split('__');
       const qIdx = parseInt(parts[1], 10);
       const blankIdx = parseInt(parts[2], 10);
-      const value = parts.slice(3).join('__');
+      // const value = parts.slice(3).join('__'); // Unused variable removed
       if (destination.droppableId === `options-${qIdx}`) {
         // Remove from blank, add back to pool
         setAnswers(prev => {
@@ -109,7 +109,7 @@ const FormPreview = ({ formId, onBack }) => {
         return prev.map((a, i) => i === qIdx ? newAns : a);
       });
     }
-  }, [answers]);
+  }, []);
 
   const handleSubmit = async () => {
     await submitResponse({ formId, answers });

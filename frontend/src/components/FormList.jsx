@@ -1,18 +1,14 @@
 
-import React, { useEffect, useState } from 'react';
-import { getForms, deleteForm } from '../api';
 
-const FormList = ({ onEdit, onPreview }) => {
-  const [forms, setForms] = useState([]);
+import React, { useState } from 'react';
+import { deleteForm } from '../api';
+
+const FormList = ({ forms, onEdit, onPreview, refreshForms }) => {
   const [shareModal, setShareModal] = useState({ open: false, link: '', copied: false });
-
-  useEffect(() => {
-    getForms().then(res => setForms(res.data));
-  }, []);
 
   const handleDelete = async (id) => {
     await deleteForm(id);
-    setForms(forms.filter(f => f._id !== id));
+    refreshForms && refreshForms();
   };
 
   const handleShare = (id) => {
