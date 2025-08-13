@@ -145,9 +145,6 @@ function App() {
           >
             Logout
           </button>
-          <div className="text-xs text-gray-400 mt-8">
-            &copy; {new Date().getFullYear()} Custom Form Builder
-          </div>
         </div>
       </aside>
       <main className="flex-1 p-12 bg-white/60 rounded-l-3xl shadow-xl">
