@@ -12,6 +12,7 @@ const FormList = ({ forms, onEdit, onPreview, refreshForms }) => {
   };
 
   const handleShare = (id) => {
+    // Share public fill link (should match FillFormRoute logic)
     const url = `${window.location.origin}/${id}`;
     setShareModal({ open: true, link: url, copied: false });
   };

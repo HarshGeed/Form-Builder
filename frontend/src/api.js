@@ -20,7 +20,7 @@ const getAuthConfig = () => {
 
 export const createForm = (data) => axios.post(`${API_BASE}/forms`, data, getAuthConfig());
 export const updateForm = (id, data) => axios.put(`${API_BASE}/forms/${id}`, data, getAuthConfig());
-export const deleteForm = (id) => axios.delete(`${API_BASE}/forms/${id}`);
+export const deleteForm = (id) => axios.delete(`${API_BASE}/forms/${id}`, getAuthConfig());
 
 export const uploadHeaderImage = (file) => {
   const formData = new FormData();
