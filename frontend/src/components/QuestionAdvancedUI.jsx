@@ -36,8 +36,86 @@ function QuestionAdvancedUI({ q, idx, updateQuestion, handleQuestionImage }) {
       </div>
     );
   }
-  // ...existing code for other question types...
-  // (You may want to add the other question type handlers here if needed)
+
+  // Categorization (category)
+  if (q.type === 'category') {
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="block mb-2 font-semibold text-gray-700">Categories (comma separated)</label>
+          <input
+            className="border border-blue-100 p-2 mb-3 w-full rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={q.categories ? q.categories.join(', ') : ''}
+            onChange={e => updateQuestion(idx, 'categories', e.target.value.split(',').map(s => s.trim()))}
+            placeholder="e.g. Fruits, Vegetables, Animals"
+          />
+        </div>
+        <div>
+          <label className="block mb-2 font-semibold text-gray-700">Values to Categorize (comma separated)</label>
+          <input
+            className="border border-blue-100 p-2 mb-3 w-full rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={q.values ? q.values.join(', ') : ''}
+            onChange={e => updateQuestion(idx, 'values', e.target.value.split(',').map(s => s.trim()))}
+            placeholder="e.g. Apple, Carrot, Lion"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Fill in the Blank (cloze)
+  if (q.type === 'cloze') {
+    return (
+      <ClozeBuilder
+        value={q.text || ''}
+        onChange={val => updateQuestion(idx, 'text', val)}
+        blanks={q.blanks || []}
+        setBlanks={blanks => updateQuestion(idx, 'blanks', blanks)}
+      />
+    );
+  }
+
+  // Normal MCQ (comprehension)
+  if (q.type === 'comprehension') {
+    return (
+      <OptionsBuilder
+        options={q.options || []}
+        setOptions={opts => updateQuestion(idx, 'options', opts)}
+        answer={q.answer}
+        setAnswer={ans => updateQuestion(idx, 'answer', ans)}
+      />
+    );
+  }
+
+  // Comprehension with passage and sub-questions (passage)
+  if (q.type === 'passage') {
+    return (
+      <div className="space-y-4">
+        <div>
+          <label className="block mb-2 font-semibold text-gray-700">Passage</label>
+          <textarea
+            className="border border-blue-100 p-2 mb-3 w-full rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={q.passage || ''}
+            onChange={e => updateQuestion(idx, 'passage', e.target.value)}
+            rows={4}
+            placeholder="Enter the passage text here..."
+          />
+        </div>
+        <div>
+          <label className="block mb-2 font-semibold text-gray-700">Sub-Questions (comma separated)</label>
+          <input
+            className="border border-blue-100 p-2 mb-3 w-full rounded-lg text-base bg-white/80 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={q.subQuestions ? q.subQuestions.join(', ') : ''}
+            onChange={e => updateQuestion(idx, 'subQuestions', e.target.value.split(',').map(s => s.trim()))}
+            placeholder="e.g. What is the main idea?, Who is the author?"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Default fallback
+  return <div className="text-red-500">Unknown question type</div>;
 }
 
 // Helper for Cloze: highlight and blank out selected words
