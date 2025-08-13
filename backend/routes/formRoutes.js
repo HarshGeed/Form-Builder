@@ -65,10 +65,12 @@ router.post('/', auth, upload.none(), async (req, res) => {
       headerImage = headerImageBody || undefined;
     }
 
+
     const form = new Form({
       title,
       headerImage,
       questions: typeof questions === 'string' ? JSON.parse(questions) : questions,
+      userId: req.user.userId,
     });
 
     await form.save();
@@ -83,7 +85,7 @@ router.post('/', auth, upload.none(), async (req, res) => {
 // Get all forms (protected)
 router.get('/', auth, async (req, res) => {
   try {
-    const forms = await Form.find();
+    const forms = await Form.find({ userId: req.user.userId });
     res.json(forms);
   } catch (err) {
     res.status(500).json({ error: err.message });

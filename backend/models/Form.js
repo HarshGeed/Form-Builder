@@ -16,10 +16,12 @@ const QuestionSchema = new mongoose.Schema({
   subQuestions: { type: Array }, // for passage type (array of {text, options, answer})
   marks: { type: Number, default: 1 }, // marks for this question
 });
+
 const FormSchema = new mongoose.Schema({
   title: { type: String, required: true },
   headerImage: { type: String }, // image path or URL
   questions: [QuestionSchema],
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now },
 });
 
